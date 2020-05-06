@@ -4,3 +4,7 @@ profpolice.jpg
 adam.png
 russell.png
 jerry.png
+carl.png
+dad.jpg
+stick.png
+winnie.jpg
