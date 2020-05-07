@@ -8,28 +8,34 @@ IMAGE_NAME_LIST = "images/image_names.txt"
 RESPONSE_FILE = "response.txt"
 THRESHOLD = 0.6
 
+class Color:
+    RED = '\033[91M'
+    BOLD = '\033[1m'
+    END = '\033[0m'
+
 class ProfanityPolice(discord.Client):
 
     def __init__(self):
         super().__init__()
+        self.channel = ""
         with open(IMAGE_NAME_LIST, "r") as fp:
-           self.image_names = fp.readlines()
-        with open(BLACKLIST_FILE, "r") as fp:
-            self.bad_words = fp.readlines()
+           self.image_names = fp.read().splitlines()
         with open(RESPONSE_FILE, "r") as fp:
-            self.responses = fp.readlines()
+            self.responses = fp.read().splitlines()
 
     def _get_response_image(self):
         """
         Randomly grab an image from the resources and return it for the bot to upload
         """
-        pass
+        rand_val = random.randint(0, len(self.image_names) - 1)
+        return "images/%s" % self.image_names[rand_val]
 
     def _get_response_message(self):
         """
         Randomly grab a response from the resources and return it for the bot to upload
         """
-        pass
+        rand_val = random.randint(0, len(self.responses) - 1)
+        return self.responses[rand_val]
 
     def _check_for_profanity(self, message):
         """
@@ -41,17 +47,19 @@ class ProfanityPolice(discord.Client):
 
     async def on_ready(self):
         print('Logged on as ', self.user)
-        await client.change_presence(activity=discord.Game(name="these hoes cuz i'm a real nigga"))
+        self.channel = discord.utils.get(self.get_all_channels(), name="general")
+        await self.change_presence(activity=discord.Game(name="these hoes cuz i'm a real nigga"))
 
     async def on_message(self, message):
         if message.author == self.user:
             return
-        is_profanity = self.check_for_profanity(message.content)
+        is_profanity = self._check_for_profanity([message.content])
         if is_profanity:
             print("profanity from %s: %s" % (message.author, message.content))
             image_path = self._get_response_image()
-            await message.channel.send(file=Discord.File(image_path))
-            await message.channel.send(self._get_response_message())
+            message = "*WEE WOO WEE WOO*\n **%s** just said a no no word! " % message.author.display_name
+            await self.channel.send(file=discord.File(image_path))
+            await self.channel.send(message + self._get_response_message())
 
 
 def _get_bot_token():
@@ -59,7 +67,7 @@ def _get_bot_token():
     Gets and returns bot token from file token.txt
     """
     with open("token.txt", "r+") as fp:
-        token = fp.readlines().strip()
+        token = fp.readlines()[0].strip()
         return token
 
 
